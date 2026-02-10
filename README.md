@@ -2,8 +2,8 @@
 
 <p align="center">
   <a href="https://huggingface.co/collections/how2everything/how2everything">🤗 HuggingFace</a> &bull;
-  <a href="https://allenai.org/papers/how2everything">📄 Paper</a> &bull;
-  <a href="https://allenai.org/papers/how2everything">📝 Blog Post</a>
+  <a href="https://arxiv.org/pdf/2602.08808">📄 Paper</a> &bull;
+  <a href="https://allenai.org/blog/how2everything">📝 Blog Post</a>
 </p>
 
 ## Overview
