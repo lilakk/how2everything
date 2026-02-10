@@ -52,5 +52,13 @@ All artifacts are available in the [How2Everything HuggingFace collection](https
 ## Citation
 
 ```bibtex
-arxiv coming soon
+@misc{chang2026how2everythingminingwebhowto,
+      title={How2Everything: Mining the Web for How-To Procedures to Evaluate and Improve LLMs}, 
+      author={Yapei Chang and Kyle Lo and Mohit Iyyer and Luca Soldaini},
+      year={2026},
+      eprint={2602.08808},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2602.08808}, 
+}
 ```
