@@ -30,6 +30,17 @@ uv run h2e mine status --out out/how2mine
 
 This shows per-topic pass/total counts for every stage, overall yield, and export file details.
 
+### Sample data
+
+The example configs above use files from `sample_data/`, which contain small datasets for quick testing:
+
+| File | Format | Rows | Description |
+|---|---|---|---|
+| `sample_split1.arrow` | Arrow | 7,000 | 500 docs per topic (14 topics), sampled from DCLM |
+| `sample_split2.arrow` | Arrow | 7,000 | Non-overlapping second split, same structure |
+
+The files use `topic_top_choice` as the topic column (configurable via `inputs.topic_field`).
+
 ## Pipeline stages
 
 The pipeline processes documents through 6 stages, then exports the results:
@@ -57,53 +68,6 @@ out_root/
 │   ├── all_valid.jsonl
 │   └── all_valid_flat.jsonl
 └── manifest.json        # Run metadata and config snapshot
-```
-
-## Output schema
-
-**`all_valid.jsonl`** — Full records with provenance from every stage:
-
-```json
-{
-  "schema_version": "how2mine.v1",
-  "source_example": {
-    "id": "doc-123",
-    "text": "...",
-    "url": "https://example.com/...",
-    "topic": "Food & Dining"
-  },
-  "processed_example": {
-    "procedures":  { "stage_passed": true, "goal": "...", "steps": ["..."] },
-    "prefilter":   { "stage_passed": true, "reason": "..." },
-    "filter":      { "stage_passed": true, "judgment": true, "reason": "..." },
-    "postprocess": { "stage_passed": true, "rewritten_goal": "...", "rewritten_steps": ["..."] },
-    "resources":   { "stage_passed": true, "resources": ["..."] },
-    "final_filter": {
-      "stage_passed": true,
-      "correctness": { "answer": "yes", "reason": "..." },
-      "sequential":  { "answer": "yes", "reason": "..." },
-      "no_specific_entity": { "answer": "yes", "reason": "..." },
-      "goal_steps_alignment": { "answer": "yes", "reason": "..." }
-    }
-  },
-  "final_procedure": {
-    "goal": "How to make sourdough bread",
-    "steps": ["Mix flour and water...", "Let rest for 12 hours...", "..."],
-    "resources": ["flour", "water", "salt", "Dutch oven"]
-  }
-}
-```
-
-**`all_valid_flat.jsonl`** — Flattened records for downstream use (evaluation, training):
-
-```json
-{
-  "source_example_id": "doc-123",
-  "topic": "Food & Dining",
-  "goal": "How to make sourdough bread",
-  "steps": ["Mix flour and water...", "Let rest for 12 hours...", "..."],
-  "resources": ["flour", "water", "salt", "Dutch oven"]
-}
 ```
 
 ## Configuration
@@ -180,16 +144,53 @@ Configure via `export.format`:
 
 Optional sharding: set `export.max_file_size` (e.g. `"500MB"`) to split output into multiple files.
 
-## Sample data
 
-`sample_data/` contains small files for quick testing:
+## Output schema
 
-| File | Format | Rows | Description |
-|---|---|---|---|
-| `sample_split1.arrow` | Arrow | 7,000 | 500 docs per topic (14 topics), sampled from DCLM |
-| `sample_split2.arrow` | Arrow | 7,000 | Non-overlapping second split, same structure |
+**`all_valid.jsonl`** — Full records with provenance from every stage:
 
-The files use `topic_top_choice` as the topic column (configurable via `inputs.topic_field`).
+```json
+{
+  "schema_version": "how2mine.v1",
+  "source_example": {
+    "id": "doc-123",
+    "text": "...",
+    "url": "https://example.com/...",
+    "topic": "Food & Dining"
+  },
+  "processed_example": {
+    "procedures":  { "stage_passed": true, "goal": "...", "steps": ["..."] },
+    "prefilter":   { "stage_passed": true, "reason": "..." },
+    "filter":      { "stage_passed": true, "judgment": true, "reason": "..." },
+    "postprocess": { "stage_passed": true, "rewritten_goal": "...", "rewritten_steps": ["..."] },
+    "resources":   { "stage_passed": true, "resources": ["..."] },
+    "final_filter": {
+      "stage_passed": true,
+      "correctness": { "answer": "yes", "reason": "..." },
+      "sequential":  { "answer": "yes", "reason": "..." },
+      "no_specific_entity": { "answer": "yes", "reason": "..." },
+      "goal_steps_alignment": { "answer": "yes", "reason": "..." }
+    }
+  },
+  "final_procedure": {
+    "goal": "How to make sourdough bread",
+    "steps": ["Mix flour and water...", "Let rest for 12 hours...", "..."],
+    "resources": ["flour", "water", "salt", "Dutch oven"]
+  }
+}
+```
+
+**`all_valid_flat.jsonl`** — Flattened records for downstream use (evaluation, training):
+
+```json
+{
+  "source_example_id": "doc-123",
+  "topic": "Food & Dining",
+  "goal": "How to make sourdough bread",
+  "steps": ["Mix flour and water...", "Let rest for 12 hours...", "..."],
+  "resources": ["flour", "water", "salt", "Dutch oven"]
+}
+```
 
 ## Resuming
 
