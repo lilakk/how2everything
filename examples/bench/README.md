@@ -1,74 +1,60 @@
 # 🎯 How2Bench
 
-Evaluate LLMs on step-by-step procedure generation. Given a goal, a model generates a candidate procedure (L2) which is judged against a reference procedure (L1) using a rubric-based evaluation.
+Evaluate LLMs on step-by-step procedure generation. Given a goal, a model generates a candidate procedure which is judged against a reference procedure using a rubric-based evaluation.
 
 The primary metric is **How2Score** = percentage of examples with zero critical failures (range 0-100%, higher is better).
 
 | Stage | Command | What it does |
 |---|---|---|
 | **run** | `h2e bench run` | Run gen → judge → aggregate end-to-end |
-| **gen** | `h2e bench gen` | Generate candidate procedures (L2) for each reference (L1) |
-| **judge** | `h2e bench judge` | Judge L2 against L1 using the rubric in `prompts/judge.txt` |
+| **gen** | `h2e bench gen` | Generate procedures from models |
+| **judge** | `h2e bench judge` | Evaluate model outputs with the How2Score eval protocol |
 | **validate** | `h2e bench validate` | Validate a config file without running anything |
-| **leaderboard** | `h2e bench leaderboard` | Compare multiple models (see [Leaderboard](#leaderboard)) |
+| **leaderboard** | `h2e bench leaderboard` | View results (see [Leaderboard](#leaderboard)) |
 
 ## Quickstart
 
-The recommended way to run How2Bench is with [`official_benchmark.yaml`](configs/official_benchmark.yaml) on a Slurm cluster. This evaluates local models with vLLM and judges with the default How2Judge (8B).
+Run evaluations end-to-end (gen → judge) then view results in terminal:
 
-`submit_official_array.sh` submits a **Slurm job array** with **one task per generator model** in your config. Each task runs **gen → judge → aggregate** and writes outputs under `<out_root>/<run_name>_<generator_id>/`.
+```bash
+uv run h2e bench run --config examples/bench/configs/official_benchmark.yaml
+uv run h2e bench leaderboard --generations-root out/how2bench --pretty
+```
+
+By default, we use the 8B How2Judge via vLLM for evaluation. For a quick run **without a GPU**, see [`api_only.yaml`](configs/api_only.yaml), which runs generation and judging through API models only.
+
+To support evaluating many models in parallel, [`official_benchmark.yaml`](configs/official_benchmark.yaml) pairs with `submit_official_array.sh`, which submits a **Slurm job array** with **one task per generator model**. Each task runs **gen → judge → aggregate** and writes outputs under `<out_root>/<run_name>_<generator_id>/`.
 
 ```bash
 mkdir -p out/how2bench/slurm_logs
 chmod +x examples/bench/submit_official_array.sh
 
-# Preview the Slurm job without submitting
+# Preview the Slurm jobs without submitting
 DRY_RUN=1 examples/bench/submit_official_array.sh \
   --config examples/bench/configs/official_benchmark.yaml
 
-# Submit (one Slurm task per model in the config)
+# Submit
 PARTITION=gpu-preempt \
 CONSTRAINT=a100-80g \
-GPUS_PER_TASK=1 \
 CPUS_PER_GPU=8 \
-MEM_PER_GPU_GB=80 \
 TIME_LIMIT=2:00:00 \
 LOG_DIR="out/how2bench/slurm_logs" \
   examples/bench/submit_official_array.sh \
   --config examples/bench/configs/official_benchmark.yaml
 ```
 
-Specify the models you want to evaluate in the yaml file.
+The script reads `tensor_parallel_size` from each model's config and automatically groups models by GPU count, submitting one Slurm job array per group. For example, if your config has three 1-GPU models and two 4-GPU models, it submits two arrays: one with `--gpus=1` and one with `--gpus=4`.
 
 <details>
 <summary>Slurm internals</summary>
 
-- The array tasks run:
+- The script calls `--print-gpu-groups` to get a JSON mapping of `gpu_count → [model_indices]`, then submits one `sbatch` per group.
+- Each array task runs:
   - `<venv_python> -m how2everything.bench.slurm.run_one_official_task --config ... --index $SLURM_ARRAY_TASK_ID`
   - `<venv_python>` is the absolute path resolved at submission time via `uv run which python`
 - The helper uses the same config parsing and pipeline code as `h2e bench run`, but runs **exactly one** model spec.
 
 </details>
-
-## Leaderboard
-
-Print evaluation results across all models you've evaluated:
-
-```bash
-# CSV to stdout (copy-paste into a spreadsheet)
-uv run h2e bench leaderboard --generations-root out/how2bench/generations/official
-
-# Filter by judge
-uv run h2e bench leaderboard --generations-root out/how2bench/generations/official --judge "<model>_<judge_id>"
-
-# Pretty terminal table
-uv run h2e bench leaderboard --generations-root out/how2bench/generations/official --pretty
-
-# Both pretty table and CSV file
-uv run h2e bench leaderboard --generations-root out/how2bench/generations/official --pretty -o leaderboard.csv
-```
-
-`--judge` is optional; if omitted, it aggregates all judge folders it finds.
 
 ## Inputs
 
@@ -84,58 +70,9 @@ Override with a local file via `inputs.path` in your config.
 
 Both the generator and the evaluator (judge) support two backends: **vLLM** for local/open models and **`lm-deluge`** for API models (OpenAI, Anthropic, Gemini). You can mix and match — e.g., generate with a local model and judge with an API model, or vice versa.
 
-See [`official_benchmark.yaml`](configs/official_benchmark.yaml) for a full example.
-Below are some canonical setups for different types of models (base, instruction-tuned, and thinking).
-
 ### Generator config
 
-```yaml
-out_root: out/how2bench/generations/official
-
-generator_defaults:  # shared defaults for all models
-  backend: vllm
-  temperature: 0.0
-  max_new_tokens: 4096
-
-# list of generator models to evaluate; can override default hyperparams
-models:
-  - model: allenai/Olmo-3-1025-7B
-    run_name: olmo3-1025-7b-stage1-step566000
-    prompt_style: base
-    vllm:
-      engine_kwargs:
-        revision: stage1-step566000
-      sampling_kwargs:
-        stop: ["\n\n"]  # for base models, we stop at double newline to prevent endless repetitions
-
-  - model: Qwen/Qwen3-8B
-    run_name: qwen3-8b-no-thinking
-    prompt_style: inst
-    vllm:
-      mode: chat
-      chat_template_kwargs:
-        enable_thinking: false  # if not set, this defaults to true
-
-  - model: Qwen/Qwen3-8B
-    run_name: qwen3-8b-with-thinking  # for thinking models, do not use greedy decoding
-    prompt_style: inst
-    temperature: 0.6
-    vllm:
-      mode: chat
-      sampling_kwargs:
-        top_p: 0.95
-        top_k: 20
-        min_p: 0.0
-```
-
-For API-based models, set `backend: deluge` and `provider`:
-
-```yaml
-models:
-  - model: gpt-4.1
-    provider: openai
-    backend: deluge
-```
+See [`official_benchmark.yaml`](configs/official_benchmark.yaml) for canonical generation configs for different types of models (base, instruction-tuned, thinking, and API models).
 
 **Model entry fields:**
 
@@ -155,28 +92,44 @@ models:
 
 Per-model fields override `generator_defaults`.
 
+<details>
+<summary>Parsing model outputs (important for models that output reasoning)</summary>
+
+After generation, how2bench parses the raw model completion into a list of discrete steps (`predicted_steps`). The heuristic works as follows:
+
+1. **Strip thinking/answer tags** — if the output contains `</think>` (chain-of-thought models like Qwen3, DeepSeek-R1), everything before the last `</think>` is discarded. If `<answer>...</answer>` tags are present, only the content between them is kept.
+2. **Numbered-list matching** — each line is tested against the pattern `^\d+[).:-]? ...` (e.g. `1. Do X`, `2) Do Y`). Matched lines become steps.
+3. **Fallback** — if no numbered lines are found, every non-empty line is treated as a step.
+
+The raw completion is always preserved in `model_completion` so no information is lost.
+
+</details>
+
+
 #### Multi-GPU vLLM
 
-To run a big open model with vLLM, set in your `generator_defaults:` block:
+For models that need multiple GPUs, set `tensor_parallel_size` in the `vllm.engine_kwargs` block — either per-model or in `generator_defaults` (per-model values are deep-merged on top of defaults):
 
 ```yaml
+# Per-model override (only this model uses 4 GPUs)
+models:
+  - model: meta-llama/Llama-4-Scout-17B-16E-Instruct
+    prompt_style: inst
+    vllm:
+      mode: chat
+      engine_kwargs:
+        tensor_parallel_size: 4
+
+# Or set as default for all models
 generator_defaults:
-  backend: vllm
-  temperature: 0.0
-  max_new_tokens: 4096
   vllm:
     engine_kwargs:
-      # Set this to match Slurm GPUs per task (e.g. GPUS_PER_TASK=4).
       tensor_parallel_size: 4
 ```
 
-Notes:
-- You can pass *any* vLLM engine kwargs via `engine_kwargs` (they are forwarded to `vllm.LLM(**kwargs)`).
-- If your cluster requires it, set `HF_TOKEN` (used by vLLM to download gated models).
-- In `official_benchmark.yaml`, you can set prompt style per generator entry with `models[].prompt_style: base|inst`.
-  This lets you safely mix base and instruct models in one job array without ambiguity.
-
 ### Evaluator config
+
+By default, we use the 8B How2Judge via vLLM, see [`official_benchmark.yaml`](configs/official_benchmark.yaml). To use an API judge instead (e.g. for a portable run without vLLM), set `evaluator:` in your config. See [`api_only.yaml`](configs/api_only.yaml) for a full end-to-end config that only uses API models.
 
 **Evaluator fields** (under `evaluator:`):
 
@@ -191,47 +144,7 @@ Notes:
 | `max_tokens_per_minute` | `100000` | API-models only |
 | `reasoning_effort` | — | API-models only |
 
-By default, how2bench uses **`how2everything/how2judge`** (8B) via **vLLM** for judging. No `evaluator:` config is needed — this is the recommended setup.
-
-To use an API judge instead (e.g. for a portable run without vLLM), set `evaluator:` in your config. See `configs/bench_sync.yaml` for an example.
-
-## Generation
-
-Generation uses prompts from `prompts/`:
-- `prompts/inference_base.txt` when `prompt_style: base`
-- `prompts/inference_inst.txt` when `prompt_style: inst`
-
-These are resolved automatically; override via `prompts.*` in config if needed.
-
-### Step extraction
-
-After generation, how2bench parses the raw model completion into a list of discrete steps (`predicted_steps`). The heuristic works as follows:
-
-1. **Strip thinking/answer tags** — if the output contains `</think>` (chain-of-thought models like Qwen3, DeepSeek-R1), everything before the last `</think>` is discarded. If `<answer>...</answer>` tags are present, only the content between them is kept.
-2. **Numbered-list matching** — each line is tested against the pattern `^\d+[).:-]? ...` (e.g. `1. Do X`, `2) Do Y`). Matched lines become steps.
-3. **Fallback** — if no numbered lines are found, every non-empty line is treated as a step.
-
-The raw completion is always preserved in `model_completion` so no information is lost.
-
-## Judging
-
-### Judge-only mode
-
-To judge an existing `generations.jsonl` without re-generating, use `paths.generations`:
-
-```yaml
-out_root: out/how2bench/generations/gpt-4.1
-
-paths:
-  generations: out/how2bench/generations/gpt-4.1/generations.jsonl
-
-evaluator:
-  backend: deluge
-  provider: openai
-  model: gpt-4.1
-```
-
-See `configs/judge_existing_generations.yaml` for a full example.
+To re-judge existing generations with a different judge, simply change `evaluator:` and re-run — generation is skipped automatically and the new judgments are written to a separate subdirectory. Use `paths.generations` only if the generations file lives outside of `out_root` (see [`judge_existing_generations.yaml`](configs/judge_existing_generations.yaml)).
 
 ## Outputs
 
@@ -249,7 +162,8 @@ judgments/
       by_topic.csv
 ```
 
-### Output schema
+<details>
+<summary>Output schema</summary>
 
 **`generations.jsonl`** — one record per benchmark example:
 
@@ -304,19 +218,24 @@ judgments/
 
 **`by_topic.csv`** — per-topic breakdown with columns: `topic`, `n_judged`, `n_with_failures`, `how2score`, `how2score_percent`, `failure_rate`, `avg_failures_per_example`.
 
-## Resumability
+</details>
 
-Both generation and judging are **append-only and resumable**. Re-running `h2e bench run` on the same config is safe:
+## Leaderboard
 
-- If `generations.jsonl` already contains all examples, generation is **skipped entirely** (the generator model is not loaded).
-- If `judgments.jsonl` already contains judgments for all generations, judging is **skipped entirely** (the judge model is not loaded).
-- Aggregation always re-runs (it is instant) so `summary.json` stays up to date.
+To view results:
 
-You can interrupt a run and resume it later, or re-run to pick up only missing examples, without redundant work or GPU allocation.
+```bash
+uv run h2e bench leaderboard --generations-root out/how2bench
+```
 
-## Run identity
+| Option | Description |
+|---|---|
+| `--pretty` | Print a formatted terminal table instead of CSV |
+| `-o leaderboard.csv` | Write results to a file |
+| `--judge "<model>_<judge_id>"` | Filter to a specific judge (default: aggregate all) |
 
-how2bench computes stable hashes to avoid mixing outputs from different configurations:
+## Resumability and run identity
 
-- **`generator_id`**: hash of resolved generator config + generation prompt SHA-256. Used in the output directory name and written to `generation_manifest.json`.
-- **`judge_id`**: hash of resolved evaluator config + judge prompt SHA-256. Used in the judgments subdirectory name and written to `judge_manifest.json` and every judgment record.
+Re-running `h2e bench run` on the same config is safe — both generation and judging are **append-only**. Completed examples are skipped (the model is not loaded if all outputs already exist), so you can interrupt and resume without redundant work or GPU allocation.
+
+How2Bench uses stable hashes (`generator_id`, `judge_id`) derived from the resolved config + prompt contents to keep outputs from different configurations separate. These hashes appear in output directory names and manifest files.

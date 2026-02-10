@@ -7,11 +7,11 @@
 ##   (see examples/bench/submit_official_array.sh for a sample Slurm job script)
 ##
 ## Outputs:
-##   out/how2bench/generations/official/<run_name>_<generator_id>/generations.jsonl
-##   out/how2bench/generations/official/<run_name>_<generator_id>/judgments/<judge>/...
+##   out/how2bench/<run_name>_<generator_id>/generations.jsonl
+##   out/how2bench/<run_name>_<generator_id>/judgments/<judge>/...
 
 # Parent directory for all generator model outputs.
-out_root: out/how2bench/generations/official
+out_root: out/how2bench
 
 # Generator backend/settings shared across all models.
 generator_defaults:

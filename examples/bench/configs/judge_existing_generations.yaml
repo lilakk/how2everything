@@ -1,33 +1,18 @@
-## Judge an existing generations.jsonl with a chosen evaluator.
+## Judge a generations.jsonl that lives outside of your out_root.
 ##
-## Use this when you already have a fixed set of model outputs (L2) and you want
-## to evaluate them with different judges without re-generating.
-##
-## Typical workflow:
-## 1) Generate once (writes generations.jsonl):
-##      uv run h2e bench gen --config examples/bench/configs/bench_sync.yaml
-##
-## 2) Judge many times (each judge gets its own `<model>_<judge_id>` subfolder):
-##      uv run h2e bench judge --config examples/bench/configs/judge_existing_generations.yaml
-##
-## To run multiple judges, copy this file and change:
-## - evaluator (or omit evaluator to use the default local how2judge)
-##
-## Each judge run also writes `judge_manifest.json` next to `judgments.jsonl`,
-## and each judgment record includes `judge_id` + `judge_prompt_sha256`.
+## Use this when the generations file was produced by someone else or lives
+## in a different directory. If you just want to re-judge your own run with
+## a different judge, simply change `evaluator:` in your original config and
+## re-run — no `paths.generations` needed.
 
-# Generation run root (contains generations.jsonl).
-out_root: out/how2bench/generations/gpt-4.1
+# Where to write judgments (separate from wherever the generations came from).
+out_root: out/how2bench/rejudge
 
-# Point at the *frozen* generations file you want to judge.
+# Path to an existing generations file (can be anywhere on disk).
 paths:
-  # Recommended pattern:
-  #   out/how2bench/generations/<gen_run>/generations.jsonl
-  generations: out/how2bench/generations/gpt-4.1/generations.jsonl
-  # judgments: /some/other/path/judgments.jsonl   # optional override
+  generations: out/how2bench/generations/gpt-4.1_abc123/generations.jsonl
 
-# Evaluator (judge) model. Omit this whole block to use the default local
-# distilled judge `how2everything/how2judge` via vLLM.
+# Evaluator (judge) model. Omit this block to use the default How2Judge (8B) via vLLM.
 evaluator:
   backend: deluge
   provider: openai

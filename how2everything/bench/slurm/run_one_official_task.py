@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import collections
 import json
 import os
 import sys
 from pathlib import Path
+from typing import Any, Mapping
 
-from how2everything.bench.config import BenchConfig, load_suite_config, model_spec_to_bench_config
+from how2everything.bench.config import BenchConfig, load_suite_config, model_spec_to_bench_config, ModelSpec, SuiteConfig
 from how2everything.bench.pipeline import run_pipeline
 
 
@@ -27,7 +29,42 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Print the number of model entries in the config and exit.",
     )
+    p.add_argument(
+        "--print-gpu-groups",
+        action="store_true",
+        help="Print JSON mapping of gpu_count -> [model_indices] and exit.",
+    )
     return p.parse_args(argv)
+
+
+def _tp_size(vllm_overrides: Mapping[str, Any] | None) -> int:
+    """Extract tensor_parallel_size from a vllm overrides dict, defaulting to 1."""
+    if not vllm_overrides:
+        return 1
+    engine_kwargs = vllm_overrides.get("engine_kwargs")
+    if not isinstance(engine_kwargs, Mapping):
+        return 1
+    tp = engine_kwargs.get("tensor_parallel_size", 1)
+    return max(int(tp), 1)
+
+
+def _gpu_groups(suite: SuiteConfig) -> dict[int, list[int]]:
+    """Group model indices by the number of GPUs they need.
+
+    GPU count per model = max(generator_tp, evaluator_tp) so the Slurm task
+    can run both the generator and the judge on the same node.
+    """
+    eval_tp = 1
+    if suite.evaluator is not None:
+        eval_tp = _tp_size(suite.evaluator.vllm)
+
+    groups: dict[int, list[int]] = collections.defaultdict(list)
+    for i, spec in enumerate(suite.models):
+        gen_tp = _tp_size(spec.vllm)
+        gpus = max(gen_tp, eval_tp)
+        groups[gpus].append(i)
+
+    return dict(sorted(groups.items()))
 
 
 def _read_index(ns: argparse.Namespace) -> int:
@@ -88,6 +125,10 @@ def main(argv: list[str] | None = None) -> int:
     suite = load_suite_config(ns.config)
     if ns.print_num_models:
         print(len(suite.models))
+        return 0
+    if ns.print_gpu_groups:
+        groups = _gpu_groups(suite)
+        print(json.dumps({str(k): v for k, v in groups.items()}))
         return 0
 
     idx = _read_index(ns)

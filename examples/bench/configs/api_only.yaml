@@ -1,0 +1,40 @@
+## API-only benchmark config (no GPU / vLLM required).
+##
+## Both generation and judging use API models via lm-deluge.
+##
+## Usage:
+##   uv run h2e bench run --config examples/bench/configs/api_only.yaml
+##
+## Outputs:
+##   out/how2bench/<run_name>_<generator_id>/generations.jsonl
+##   out/how2bench/<run_name>_<generator_id>/judgments/<judge>/...
+
+# Parent directory for all generator model outputs.
+out_root: out/how2bench
+
+# Generator backend/settings shared across all models.
+generator_defaults:
+  backend: deluge
+  temperature: 0.0
+  max_new_tokens: 4096
+
+# Generator models to benchmark. Each entry should set `prompt_style: base|inst`.
+models:
+  - model: gpt-4.1
+    provider: openai
+    prompt_style: inst
+
+  - model: gpt-5
+    provider: openai
+    prompt_style: inst
+    reasoning_effort: minimal
+
+evaluator:
+  model: gpt-5
+  reasoning_effort: minimal  # minimal reasoning for better reproducibility
+  backend: deluge
+  provider: openai
+  temperature: 1.0  # OpenAI reasoning models don't support changing temperature
+  max_new_tokens: 8192
+  max_requests_per_minute: 1000
+  max_tokens_per_minute: 100000

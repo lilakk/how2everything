@@ -1,4 +1,4 @@
-# How2Everything: Mining the Web for How-To Procedures to Evaluate and Improve LLMs
+# [How2Everything: Mining the Web for How-To Procedures to Evaluate and Improve LLMs](https://arxiv.org/pdf/2602.08808)
 
 <p align="center">
   <a href="https://huggingface.co/collections/how2everything/how2everything">🤗 HuggingFace</a> &bull;
@@ -10,7 +10,9 @@
 
 ![How2Everything Overview](assets/figure1.png)
 
-Generating step-by-step how-to procedures is a key LLM capability, and procedural reasoning underpins many downstream tasks. **How2Everything** is a scalable framework for evaluating and improving this capability. It shows how pretraining web data can support a closed loop of capability evaluation and improvement at scale. The three main components include:
+LLMs constantly produce instructions for everything, from diverse real-world goals (e.g., filing taxes, cooking recipes) to plans for AI agents, but improving this capability is challenging. Outputs can sound fluent while describing steps that don't actually work; surface-level metrics miss critical mistakes like omitted prerequisites or contradictory instructions; and manual verification doesn't scale.
+
+**How2Everything** closes this gap with a practical loop: mine real procedures from the web → benchmark LLM outputs → detect critical failures (missing steps, wrong order, omissions) → use that signal to train better models.
 
 - ⛏️ **How2Mine** — a multi-stage pipeline that mines structured procedures (goal + resources + steps) from web documents; running it on ~1M pages yields 351K procedures across 14 topics.
 - 🎯 **How2Bench** — a 7K-example evaluation benchmark balanced across topics, with:
@@ -28,9 +30,25 @@ uv venv && uv sync
 
 API calls (OpenAI, Anthropic, Gemini) are handled by [lm-deluge](https://github.com/taylorai/lm-deluge), which handles rate limiting, retries, and provider-specific translation (OpenAI, Anthropic, Gemini, etc.). Local model inference uses [vLLM](https://github.com/vllm-project/vllm).
 
-## Getting Started
+## Quickstart
 
-Each component has its own documentation with usage instructions, configs, and examples:
+After installation, each component can be accessed via the `h2e` CLI:
+
+```bash
+# Mine procedures from documents (requires OPENAI_API_KEY or other provider key)
+uv run h2e mine run --config examples/mine/configs/openai_sync.yaml
+
+# Evaluate a model on How2Bench (uses How2Judge via vLLM by default)
+uv run h2e bench run --config examples/bench/configs/official_benchmark.yaml
+
+# Deduplicate training data against the test set
+uv run python examples/train/dedup_against_test.py \
+    --train-path hf://how2everything/how2train_rl_100k?split=train \
+    --test-path hf://how2everything/how2bench?split=train \
+    --output-path data/train_deduped.jsonl
+```
+
+See each component's README for full details:
 
 - ⛏️ [How2Mine](examples/mine) — mine procedures from your own documents
 - 🎯 [How2Bench](examples/bench) — evaluate models and reproduce the leaderboard
