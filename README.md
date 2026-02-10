@@ -32,9 +32,9 @@ API calls (OpenAI, Anthropic, Gemini) are handled by [lm-deluge](https://github.
 
 Each component has its own documentation with usage instructions, configs, and examples:
 
-- ⛏️ [How2Mine](examples/mine/README.md) — mine procedures from your own documents
-- 🎯 [How2Bench](examples/bench/README.md) — evaluate models and reproduce the leaderboard
-- 🚀 [How2Train](examples/train/README.md) — prepare training data and run RL with [open-instruct](https://github.com/allenai/open-instruct)
+- ⛏️ [How2Mine](examples/mine) — mine procedures from your own documents
+- 🎯 [How2Bench](examples/bench) — evaluate models and reproduce the leaderboard
+- 🚀 [How2Train](examples/train) — prepare training data and run RL with [open-instruct](https://github.com/allenai/open-instruct)
 
 ## Released Artifacts
 
