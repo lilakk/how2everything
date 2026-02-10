@@ -1,0 +1,71 @@
+## Inputs
+
+Below is a goal and a list of steps to achieve it. Read them carefully.
+
+Goal:
+{goal}
+
+Steps:
+{steps}
+
+---
+
+## Possible Categories
+
+Classify the goal and steps using the categories below, or indicate that no category fits if none are applicable.
+
+1. **Named-entity Focused**
+   - The goal and/or steps explicitly revolve around a named entity such as a specific person, organization, website, software, or branded product.
+   - Examples:
+     - "Make a pivot table in Microsoft Excel"
+     - "Recreate the hairstyle of Emma Roberts in her recent film"
+     - "Prepare a presentation for the UN sustainability summit"
+
+2. **Pure Math**
+   - The entire task is purely a mathematical calculation or formula-solving exercise.
+   - Examples:
+     - "Find the square root of 144"
+     - "Solve for x in 2x + 5 = 15"
+     - "Compute the interest on a $1,000 loan at 5 percent for 3 years"
+
+3. **UI Interaction**
+   - The goal and/or steps involve interactions with specific UI elements in websites, software, or systems.
+   - Examples:
+     - "Navigate to LinkedIn.com"
+     - "Click Next and log in"
+     - "Run `pip install requests` in the terminal"
+
+4. **Open-ended Creative Generation**
+   - The goal and/or steps involve subjective, artistic, or imaginative creation where the output can vary widely.
+   - Examples:
+     - "Write a poem about autumn"
+     - "Compose a short story about a robot learning to cook"
+     - "Create a color palette that feels like early spring"
+
+5. **Non-sequential Process**
+   - A non-sequential process is one where most steps do not need to follow a fixed order. Each step is independent or only loosely connected, so they can be completed in any sequence without changing the overall outcome. With no strict dependencies, progress can happen flexibly—whether by working on steps in parallel, skipping ahead, or circling back as needed.
+   - Examples:
+     - 1. Try different forms of exercise 2. Consult a nutritionist 3. Experiment with meal plans 4. Track sleep 5. Practice stress-reduction techniques
+     - 1. Sketch possible product concepts 2. Research competitors 3. Estimate rough costs 4. Discuss with potential customers 5. Jot down names/branding ideas
+     - 1. Donate clothes you no longer wear 2. Sell unused gadgets online 3. Organize kitchen cabinets 4. Sort through old papers and files 5. Rearrange furniture for better space flow
+
+6. **Unreasonable Procedure**
+   - The given steps cannot plausibly achieve the stated goal because some steps are logically impossible, irrelevant, contradictory, or omit critical actions.
+
+---
+
+## Task
+
+Determine if the provided goal and steps **fully match any of the categories above**.
+- Set "judgment" to false if no category fully applies. If at least one category fully applies, set it to true.
+- If "judgment" is true, provide a concise "reason" that explicitly mentions the relevant categories. Otherwise, leave "reason" as an empty string.
+
+---
+
+## Output Format
+
+Return your output in the following JSON format:
+{{
+    "judgment": <boolean>,
+    "reason": <string>
+}}

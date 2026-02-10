@@ -1,0 +1,53 @@
+Goal:
+Prevent a door from slamming shut by cushioning the latch with a rubber band.
+
+Resources:
+[rubber band, door]
+
+Exactly 3 steps to achieve the goal using the given resources:
+1. Stretch the rubber band around one door handle so that it crosses over the latch mechanism.
+2. Twist the band once and loop it over the opposite handle, keeping it taut.
+3. Center the band so it lies flat across the latch plate.
+
+Goal:
+Build a tabletop Zen sand garden to encourage daily mindfulness.
+
+Resources:
+[shallow tray, fine sand, small rocks, smooth shell, miniature rake, decorative figurine, essential oil, brush]
+
+Exactly 8 steps to achieve the goal using the given resources:
+1. Place the shallow tray on a stable, level surface.
+2. Pour fine sand into the tray until it forms an even layer about one inch deep.
+3. Tap the tray edges lightly to settle and level the sand.
+4. Arrange small rocks asymmetrically to create natural focal points.
+5. Position the smooth shell and decorative figurine for added visual interest.
+6. Use the miniature rake to draw flowing patterns around the objects.
+7. Add one or two drops of essential oil onto a corner of the sand for subtle fragrance.
+8. Gently brush stray grains from the tray edges to keep the display tidy.
+
+Goal:
+Calibrate and pair a Bluetooth stylus with a tablet for reliable digital note-taking, then save the configuration.
+
+Resources:
+[Bluetooth stylus, charging cable, tablet, tablet Bluetooth settings, stylus settings panel, note-taking app, microfiber cloth, internet connection]
+
+Exactly 11 steps to achieve the goal using the given resources:
+1. Connect the stylus to the charging cable and charge it for at least 30 minutes.
+2. Power on the tablet and enable Bluetooth in the settings menu.
+3. Disconnect the stylus from the charger and activate pairing mode.
+4. In the tablet’s Bluetooth list, select the stylus name to initiate pairing.
+5. Confirm any on-screen pairing prompt to finalize the connection.
+6. Open the stylus settings panel found under "Paired Devices."
+7. Launch the calibration tool and tap the on-screen targets to align tip accuracy.
+8. Adjust pressure sensitivity to personal preference.
+9. Open the note-taking app and create a test page.
+10. Write and draw to verify smooth input and proper pressure response.
+11. Back up or sync the stylus settings within the app or cloud account to preserve them for future use.
+
+Goal:
+{goal}
+
+Resources:
+{resources}
+
+Exactly {n} steps to achieve the goal using the given resources:

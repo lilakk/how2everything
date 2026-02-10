@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "how2everything"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    # Core
+    "pydantic>=2.11.7",
+    "pyyaml>=6.0",
+    # LLM inference (API calls via lm-deluge, local via vllm)
+    "lm_deluge>=0.0.105",
+    "vllm==0.11.2",
+    # Data formats (how2mine: reading/writing documents)
+    "zstandard>=0.23.0",
+    "pyarrow>=22.0.0",
+    # HuggingFace datasets (how2bench: loading benchmark data)
+    "datasets>=4.0.0",
+    "hf-transfer>=0.1.9",
+    "pandas>=2.3.3",
+    "sentence-transformers>=5.2.2",
+    "rich>=14.3.2",
+]
+
+[project.scripts]
+# Public CLI entrypoint for the official release workflow.
+h2e = "how2everything.cli:main"
+
+[tool.setuptools.packages.find]

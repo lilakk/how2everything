@@ -1,0 +1,84 @@
+## Official benchmark suite runner.
+##
+## This runs generation and evaluation for a given list of generator models on How2Bench.
+##
+## Usage:
+##   uv run h2e bench run --config examples/bench/configs/official_benchmark.yaml
+##   (see examples/bench/submit_official_array.sh for a sample Slurm job script)
+##
+## Outputs:
+##   out/how2bench/generations/official/<run_name>_<generator_id>/generations.jsonl
+##   out/how2bench/generations/official/<run_name>_<generator_id>/judgments/<judge>/...
+
+# Parent directory for all generator model outputs.
+out_root: out/how2bench/generations/official
+
+# Generator backend/settings shared across all models.
+generator_defaults:
+  backend: vllm
+  temperature: 0.0
+  max_new_tokens: 4096
+
+# Generator models to benchmark. Each entry should set `prompt_style: base|inst`.
+models:
+  - model: allenai/Olmo-3-1025-7B
+    run_name: olmo3-1025-7b-stage1-step566000
+    prompt_style: base
+    vllm:
+      engine_kwargs:
+        revision: stage1-step566000
+      sampling_kwargs:
+        stop: ["\n\n"]  # for base models, we stop at double newline to prevent endless repetitions
+
+  - model: allenai/Olmo-3-1025-7B
+    run_name: olmo3-1025-7b-stage1-step1413814
+    prompt_style: base
+    vllm:
+      engine_kwargs:
+        revision: stage1-step1413814
+      sampling_kwargs:
+        stop: ["\n\n"]
+
+  - model: allenai/Olmo-3-1025-7B
+    run_name: olmo3-1025-7b
+    prompt_style: base
+    vllm:
+      sampling_kwargs:
+        stop: ["\n\n"]
+
+  - model: allenai/Olmo-3-7B-Instruct
+    run_name: olmo3-7b-instruct
+    prompt_style: inst
+    vllm:
+      mode: chat
+  
+  - model: Qwen/Qwen3-8B
+    run_name: qwen3-8b-no-thinking
+    prompt_style: inst
+    vllm:
+      mode: chat
+      chat_template_kwargs:
+        enable_thinking: false  # if not set, this defaults to true
+
+  - model: Qwen/Qwen3-8B
+    run_name: qwen3-8b-with-thinking
+    prompt_style: inst
+    temperature: 0.6          # override the default 0.0
+    vllm:
+      mode: chat
+      sampling_kwargs:
+        top_p: 0.95
+        top_k: 20
+        min_p: 0.0
+
+  ## For API models, make sure the relevant API key is set (e.g. OPENAI_API_KEY).
+  - model: gpt-4.1
+    provider: openai
+    backend: deluge
+    prompt_style: inst
+
+  - model: gpt-5
+    provider: openai
+    backend: deluge
+    prompt_style: inst
+    reasoning_effort: minimal

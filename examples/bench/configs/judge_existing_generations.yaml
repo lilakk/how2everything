@@ -1,0 +1,38 @@
+## Judge an existing generations.jsonl with a chosen evaluator.
+##
+## Use this when you already have a fixed set of model outputs (L2) and you want
+## to evaluate them with different judges without re-generating.
+##
+## Typical workflow:
+## 1) Generate once (writes generations.jsonl):
+##      uv run h2e bench gen --config examples/bench/configs/bench_sync.yaml
+##
+## 2) Judge many times (each judge gets its own `<model>_<judge_id>` subfolder):
+##      uv run h2e bench judge --config examples/bench/configs/judge_existing_generations.yaml
+##
+## To run multiple judges, copy this file and change:
+## - evaluator (or omit evaluator to use the default local how2judge)
+##
+## Each judge run also writes `judge_manifest.json` next to `judgments.jsonl`,
+## and each judgment record includes `judge_id` + `judge_prompt_sha256`.
+
+# Generation run root (contains generations.jsonl).
+out_root: out/how2bench/generations/gpt-4.1
+
+# Point at the *frozen* generations file you want to judge.
+paths:
+  # Recommended pattern:
+  #   out/how2bench/generations/<gen_run>/generations.jsonl
+  generations: out/how2bench/generations/gpt-4.1/generations.jsonl
+  # judgments: /some/other/path/judgments.jsonl   # optional override
+
+# Evaluator (judge) model. Omit this whole block to use the default local
+# distilled judge `how2everything/how2judge` via vLLM.
+evaluator:
+  backend: deluge
+  provider: openai
+  model: gpt-4.1
+  temperature: 0.0
+  max_new_tokens: 2048
+  max_requests_per_minute: 1000
+  max_tokens_per_minute: 100000

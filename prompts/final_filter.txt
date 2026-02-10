@@ -1,0 +1,44 @@
+## Inputs
+
+Below is a goal and a list of steps to achieve the goal using the given resources.
+
+Goal:
+{goal}
+
+Resources (could be empty):
+{resources}
+
+Steps:
+{steps}
+
+## Task
+
+Answer the following questions:
+
+- **correctness**: Do the steps correctly achieve the stated goal?
+- **sequential**: Do the steps form a clear, linear sequence (no branching or alternative paths)?
+- **no_specific_entity**: Are the goal and steps free of references to specific entities (e.g., particular people, products, websites, named resources, etc.) that require external context to be understood?
+- **goal_steps_alignment**: Do the goal, steps, and resources together define a mostly deterministic plan - such that, given the goal and the provided resources (which may be an empty list), the steps represent an unambiguous and largely the only way to achieve the goal (allowing for minor variations in execution)?
+
+## Output Format
+
+Return your response in the following JSON format. If your answer to any question is "no", provide a one-sentence reason. Otherwise, leave the reason empty.
+
+{{
+    "correctness": {{
+        "answer": "yes" or "no",
+        "reason": "..."
+    }},
+    "sequential": {{
+        "answer": "yes" or "no",
+        "reason": "..."
+    }},
+    "no_specific_entity": {{
+        "answer": "yes" or "no",
+        "reason": "..."
+    }},
+    "goal_steps_alignment": {{
+        "answer": "yes" or "no",
+        "reason": "..."
+    }}
+}}

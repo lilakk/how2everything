@@ -1,0 +1,71 @@
+# Advanced config: use a local vLLM model for extraction, then API for later stages.
+
+out_root: out/how2mine/mixed_vllm_extract_openai_rest
+
+inputs:
+  # path: /scratch4/workspace/yapeichang_umass_edu-ai2/yapeic/proc-data/data/dclm/tutorial_subset/raw/data-00000-of-00023.arrow
+  id_field: id
+  text_field: text
+  url_field: id
+  topic_field: topic_top_choice
+  # Directory mode (non-recursive):
+  path: /scratch4/workspace/yapeichang_umass_edu-ai2/yapeic/proc-data/data/dclm/tutorial_subset/raw
+  include_globs: ["*.arrow"]
+  format: auto
+  compression: auto
+
+topics:
+  - Health
+  - Food & Dining
+
+stage_llm_overrides:
+  procedures:
+    backend: vllm
+    model: Qwen/Qwen3-8B
+    temperature: 0.0
+    # vLLM-specific controls (used only when backend=vllm).
+    vllm:
+      # "generate" = raw prompts; "chat" = wrap each prompt as a single user message and call LLM.chat().
+      mode: chat
+      worker_multiproc_method: spawn
+      hf_token_env: HF_TOKEN
+      engine_kwargs:
+        # tensor_parallel_size: 1
+        # dtype: bfloat16
+        # revision: main
+        # trust_remote_code: true
+      # Passed through to vllm.SamplingParams(**sampling_kwargs) in addition to temperature/max_tokens.
+      sampling_kwargs:
+        # top_p: 0.95
+        # seed: 0
+      # Chat templating (only in mode=chat). If you set chat_template_path it must exist.
+      # chat_template_path: /abs/path/to/template.jinja
+      chat_template_kwargs: {"enable_thinking": false}
+      add_generation_prompt: true
+      # If a stage passes output_schema (how2mine does), require vLLM guided decoding support.
+      require_guided_json: true
+
+llm:
+  provider: openai
+  model: gpt-4.1
+  temperature: 0.0
+  max_new_tokens: 2048
+  # Concurrency/rate-limits are managed by lm-deluge.
+  max_requests_per_minute: 10000
+  max_tokens_per_minute: 1200000
+
+prompts:
+  procedures: prompts/extract_procedures.txt
+  filter: prompts/filter.txt
+  postprocess: prompts/postprocess.txt
+  resources: prompts/extract_resources.txt
+  final_filter: prompts/final_filter.txt
+
+targets:
+  candidates_per_topic: 200        # max documents to extract per topic (the budget)
+  desired_valid_per_topic: 50      # stop early once this many pass all stages per topic
+  extract_batch_size: 200          # new candidates per topic per round
+
+export:
+  format: jsonl        # jsonl | jsonl_zst | parquet | arrow_ipc
+  max_file_size: "500MB"   # optional; if omitted -> single file

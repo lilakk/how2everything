@@ -1,0 +1,51 @@
+## Inputs
+
+Below is a goal and a list of steps to achieve the goal.
+
+Goal:
+{goal}
+
+Steps:
+{steps}
+
+## Task
+
+Revise the goal and steps so that they strictly fulfill all of the following conditions:
+
+1. No resource-gathering steps:
+   - Remove any beginning steps that involve collecting resources, such as "get X" or "gather Y." Assume that all required resources are already available.
+
+2. Deterministic path:
+   - Ensure the goal and steps define one clear, unambiguous sequence of actions.
+   - Remove any optional or conditional phrasing (e.g., "do X with A or B," "if desired," or "if X, do Y") by selecting and committing to a single branch, then update the goal and steps to reflect that choice.
+
+3. Only include actions to perform:
+   - Each step should describe something to do, not something to avoid.
+   - Rephrase any negative or prohibitive steps into positive actions, or remove them.
+
+4. Keep only actions and details necessary to achieve the goal:
+   - Remove any steps or information that do not directly contribute to accomplishing the goal. Eliminate optional, decorative, or repetitive elements that have no effect on the final outcome.
+
+5. One major action per step:
+   - Each step must involve a single, coherent major action or task.
+   - If a step contains multiple distinct actions (e.g., "mix, let stand, and drain"), split it into separate steps so that each represents a single clear operation.
+
+6. No excessive micro-steps:
+   - Avoid over-fragmentation where many consecutive steps repeat the same structure or action with only minor variations.
+   - Combine such micro-actions into a single, higher-level step that naturally groups related operations into one meaningful stage of the process.
+
+7. Goal–steps alignment:
+   - Rewrite the goal so that it precisely reflects the scope, intent, and level of detail of the steps, ensuring that the steps represent the only valid and sufficient way to achieve it.
+   - The goal should describe what is being accomplished, not how it's done. Avoid procedural or action-level details.
+   - Adjust general or broad goals to be specific enough that the listed steps are the only natural and complete way to fulfill them.
+
+Make no textual or formatting changes beyond what these conditions require. If no edits are necessary, leave the goal and steps unchanged.
+
+## Output Format
+
+Return your response in the following JSON format.
+
+{{
+    "rewritten_goal": <string>,
+    "rewritten_steps": <string[]>
+}}

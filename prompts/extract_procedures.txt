@@ -1,0 +1,24 @@
+You will be looking at a document from a web corpora. Your goal is to extract a well-defined sequential process containing a list of at least three executable steps. A valid process should fulfill all of the following requirements:
+
+1. Sequential: the steps should follow a sequential order, where later steps depend on the completion of previous steps.
+2. Imperative and atomic: express each step as a single action. Add adjectives or adverbs only when they supply essential precision (e.g., "coarsely grind beans" vs. simply "grind beans").
+3. Concrete: each step should specify what to do, not why.
+
+In order to satisfy these requirements, the steps you extract may differ from how they are originally presented in the document. If there exists such a valid process, you should also extract the goal of this process, which should:
+
+1. Clearly state the outcome the process is meant to achieve.
+2. Contain any essential context or constraints needed to understand or bound that outcome.
+
+Output your response in JSON format following this convention:
+
+{{
+    "has_valid_process": <boolean>,  // true or false
+    "goal": <string>,  // can be an empty string if there is no valid process
+    "steps": <string[]>  // can be an empty list if there is no valid process
+}}
+
+If it is impossible to extract a valid process from the given document, simply set "has_valid_process" to false, and leave "goal" and "steps" empty.
+
+<start of document>
+{document}
+<end of document>

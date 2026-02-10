@@ -1,0 +1,41 @@
+out_root: out/how2mine/openai_sync_no_topics
+
+inputs:
+  # path: /scratch4/workspace/yapeichang_umass_edu-ai2/yapeic/proc-data/data/dclm/tutorial_subset/raw/data-00000-of-00023.arrow
+  id_field: id
+  text_field: text
+  url_field: id
+  # Directory mode (non-recursive):
+  path: /scratch4/workspace/yapeichang_umass_edu-ai2/yapeic/proc-data/data/dclm/tutorial_subset/raw
+  include_globs: ["*.arrow"]
+  format: auto
+  compression: auto
+
+# topics is optional. If omitted (or set to []), the pipeline runs in no-topics mode:
+# it processes all input records (up to targets.candidates_per_topic total) and writes `all.jsonl` per stage.
+topics: []
+
+llm:
+  provider: openai
+  model: gpt-4.1
+  temperature: 0.0
+  max_new_tokens: 2048
+  # Concurrency/rate-limits are managed by lm-deluge.
+  max_requests_per_minute: 10000
+  max_tokens_per_minute: 1200000
+
+prompts:
+  procedures: prompts/extract_procedures.txt
+  filter: prompts/filter.txt
+  postprocess: prompts/postprocess.txt
+  resources: prompts/extract_resources.txt
+  final_filter: prompts/final_filter.txt
+
+targets:
+  candidates_per_topic: 200        # max documents to extract (the budget)
+  desired_valid_per_topic: 50      # stop early once this many pass all stages
+  extract_batch_size: 200          # new candidates per round
+
+export:
+  format: jsonl        # jsonl | jsonl_zst | parquet | arrow_ipc
+  max_file_size: "500MB"   # optional; if omitted -> single file

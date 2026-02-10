@@ -1,0 +1,7 @@
+*.npy
+__pycache__/
+.venv/
+.claude/
+*.egg-info/
+out/
+dev_utils/

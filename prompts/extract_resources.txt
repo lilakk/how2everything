@@ -1,0 +1,21 @@
+Below is a goal and a corresponding list of steps to achieve that goal.
+
+Goal:
+{goal}
+
+Steps:
+{steps}
+
+Your task is to extract and return a deduplicated list of every distinct resource—tool, ingredient, piece of equipment, location, entity, etc.—explicitly mentioned in the steps only. Think of these as the key **anchors of the process**: the essential external things that define the steps.
+
+Guidelines:
+1. List each resource only once.
+2. Include only primary, external resources. Skip anything produced along the way (intermediate creations).
+3. Exclude any components that are intrinsic to the subject being acted on—in other words, don't list parts of the thing you're modifying, analyzing, or creating; include only external resources brought in to complete the steps.
+4. Ignore verbs, non‑identifying adjectives, measurements, and generic or vague terms like "parts," "item," "object," "surface," or pronouns.
+
+Please return your response in the following JSON format:
+
+{{
+    "resources": <string[]>
+}}
